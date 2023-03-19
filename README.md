@@ -20,7 +20,7 @@ npm install
 npm run start
 ```
 
-### Fetch and update ZOHO-ENTIDADES-TYPES.TS file 
+### Fetch and update ZOHO-ENTIDADES-TYPES.TS file with the most recent fields from your Zoho CRM
 ```
 npm run update-zoho-types
 ```
