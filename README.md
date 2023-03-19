@@ -1,6 +1,6 @@
 # Starter Project for integrating Zoho CRM
 
-# CONFIGURATIONS
+## CONFIGURATIONS
 
 Configure the MONGODB_URI, ZOHO_CLIENT_ID and ZOHO_CLIENT_SECRET in your .env file. You can also replace the MongoDB interface with other database of your wish. Just keep the Zoho Token schema as it is.
 
