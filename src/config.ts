@@ -20,6 +20,10 @@ export function config() {
 
     const { NODE_ENV } = env || {}
 
+    if(NODE_ENV == "prod"){
+        console.log = ()=>{}
+    }
+
     if (NODE_ENV?.toLowerCase?.() == "update_zoho_types") {
         // npm run update-zoho-types - para atualizar o arquivo zoho-entidades-types.ts com os campos mais recentes
         new ZohoTypesGenerator().atualizaCamposDisponiveis()

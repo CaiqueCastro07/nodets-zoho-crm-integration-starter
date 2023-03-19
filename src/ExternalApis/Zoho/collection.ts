@@ -10,6 +10,7 @@ import { ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET } from "../../util/secrets"
 //@ts-ignore
 const isProd = process?.env?.NODE_ENV?.toLowerCase?.() == "prod"
 
+const accessTokenQuantity = isProd ? 5 : 1 // in the local/test environment will only create one access token, on prod will create 5 - the limit is 10
 const localAccessToken: string[] = [];
 const localClientId: string | undefined = ZOHO_CLIENT_ID; // colocar aqui o client ID
 const localClientSecret: string | undefined = ZOHO_CLIENT_SECRET; // colocar aqui o clientSecret
@@ -101,7 +102,7 @@ class ZohoApiCollection {
 
         }
 
-        const getAccessTokens = await this.getAccessTokens(isProd ? 5 : 1)
+        const getAccessTokens = await this.getAccessTokens(accessTokenQuantity)
 
         if (getAccessTokens?.error) {
             accessTokenRenewing = false;
