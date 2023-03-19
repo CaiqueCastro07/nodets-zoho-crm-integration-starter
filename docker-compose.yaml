@@ -1,0 +1,10 @@
+version: '3.0'
+
+services:
+  api:
+    build: .
+    container_name: base-node-zoho
+    image: base-node-zoho
+    command: npm start
+    ports:
+      - "3001:3001"
