@@ -23,8 +23,7 @@
                 "node_modules/**"
             ],
             "env": {
-                "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json",
-                "NODE_ENV": "prod"
+                "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json"
             },
             "outputCapture": "std"
         },
