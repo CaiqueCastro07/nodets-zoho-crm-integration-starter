@@ -604,7 +604,7 @@ class ZohoApiCollection {
 
         try {
 
-            const { data: zohoResult, status } = await this.#api.get(`${moduleName}/search?criteria=(${fieldName}:startwith:${recordValue})`)
+            const { data: zohoResult, status } = await this.#api.get(`${moduleName}/search?criteria=(${fieldName}:starts_with:${recordValue})`)
 
             const queried = zohoResult?.data?.[0]
 
