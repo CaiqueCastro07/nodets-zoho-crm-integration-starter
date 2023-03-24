@@ -8,6 +8,7 @@ import { isObject } from "lodash";
 
 const modulosUsados: string[] = ["Leads", "Contacts", "Accounts", "Tasks"]
 
+
 class ZohoTypesGenerator extends ZohoApiCollection {
 
     constructor() {
@@ -17,20 +18,13 @@ class ZohoTypesGenerator extends ZohoApiCollection {
     }
     async atualizaCamposDisponiveis() {
 
-        const { name: funcName } = this.atualizaCamposDisponiveis
-
-        if (!Array.isArray(modulosUsados)) return errorStruct(funcName, "Não foi encontrado uma lista de módulos para pesquisar", { modulosUsados })
-
         const { data: jsonCampos, error: jsonCamposError } = await this.montaJSONCamposModulos()
 
         if (jsonCamposError) return errorStruct("atualizaCamposDisponiveis", jsonCamposError, jsonCampos)
 
-        if (!isObject(jsonCampos)) return errorStruct(funcName, "A funcao de montar o JSON não retornou um objeto", { jsonCampos })
-
         let text = `//ultima atualização do arquivo as ${moment().tz('America/Sao_Paulo')?.format?.("DD/MM/YYYY - hh:mm:ss")}\n\n// npm run update-zoho-types - para atualizar o arquivo zoho-entidades-types.ts com os campos mais recentes\n\n`;
 
         this.interfacesExtras().forEach((e) => {
-            if (!e || typeof e != 'string') return
             text += e
         })
 
@@ -43,8 +37,6 @@ class ZohoTypesGenerator extends ZohoApiCollection {
             text += `interface ${modulo} {\n`;
 
             modulos.push(modulo)
-
-            if (!isObject(entidades)) return
 
             Object.entries(entidades).forEach(([field, data], i2) => {
 
@@ -87,10 +79,10 @@ class ZohoTypesGenerator extends ZohoApiCollection {
         })
 
     }
-    async montaJSONCamposModulos(): Promise<ErrorStruct | { error: false, data: MappingZoho }> {
+    async montaJSONCamposModulos(): Promise<ErrorStruct | SuccessStruct> {
 
-        const mapping: MappingZoho = {}
-        // control your types as you wish here
+        const mapping: { [key: string]: any } = {}
+
         const existentTypes = {
             autonumber: "number",
             bigint: "number",
@@ -132,7 +124,13 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                     }
                 }
 
-                alt2: for (const e1 of data) {
+                if (e == "Tasks") acc["$se_module"] = {
+                    data_type: `"Accounts" | "Leads" | "Contacts"`,
+                    field_labe: "se_module",
+                    id: "i428498"
+                };
+
+                alt1: for (const e1 of data) {
 
                     const { api_name, data_type, field_label, id, visible, subform, pick_list_values } = e1 || {}
 
@@ -147,14 +145,12 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                             id
                         }
 
-                        continue alt2
+                        continue alt1
                     }
 
                     if (data_type == "subform") {
 
                         const { module: subFormName } = subform || {}
-
-                        if (!subFormName || typeof subFormName != 'string') continue alt2
 
                         await delay(200)
 
@@ -170,13 +166,71 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                             }
                         }
 
-                        alt: for (const e2 of subFormFields) {
+                        alt2: for (const e2 of subFormFields) {
 
                             const { api_name: api_name2, data_type: data_type2, field_label: field_label2,
-                                id: id2, visible: visible2 } = e2 || {}
+                                id: id2, visible: visible2, pick_list_values:subPickList } = e2 || {}
 
-                            if (!api_name2 || typeof api_name2 != 'string') continue alt
-                            if (!visible2) continue alt
+                            if (!api_name2 || typeof api_name2 != 'string') continue alt2
+                            if (!visible2) continue alt2
+
+                            if (data_type == "multiselectpicklist" && Array.isArray(subPickList)) {
+
+                                const options = subPickList.reduce((acc, e3, i3) => {
+        
+                                    const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : ")[] | []";
+        
+                                    if (!e3?.display_value || typeof e3?.display_value != 'string') return acc
+        
+                                    if (e3?.display_value.toLowerCase().includes("none")) {
+                                        acc += (` null ` + sep)
+                                        return acc
+                                    }
+        
+                                    acc += (` "${e3?.display_value}" ` + sep)
+        
+                                    return acc
+        
+                                }, "(")
+        
+                                subFormTypes[api_name2] = {
+                                    data_type: options,
+                                    field_label,
+                                    id
+                                }
+        
+                                continue alt2
+        
+                            }
+        
+                            if (data_type2 == "picklist" && Array.isArray(subPickList)) {
+        
+                                const options = subPickList.reduce((acc, e3, i3) => {
+        
+                                    const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : "";
+        
+                                    if (!e3?.display_value || typeof e3?.display_value != 'string') return acc
+        
+                                    if (e3?.display_value.toLowerCase().includes("none")) {
+                                        acc += (` null ` + sep)
+                                        return acc
+                                    }
+        
+                                    acc += (` "${e3?.display_value}" ` + sep)
+        
+                                    return acc
+        
+                                }, "")
+        
+                                subFormTypes[api_name2] = {
+                                    data_type: options,
+                                    field_label,
+                                    id
+                                }
+        
+                                continue alt2
+        
+                            }
 
                             subFormTypes[api_name2] = {
                                 data_type: existentTypes[data_type2],
@@ -194,7 +248,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
 
                         mapping["Subform_" + subFormName] = subFormTypes
 
-                        continue alt2
+                        continue alt1
 
                     }
 
@@ -223,7 +277,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                             id
                         }
 
-                        continue alt2
+                        continue alt1
 
                     }
 
@@ -252,7 +306,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                             id
                         }
 
-                        continue alt2
+                        continue alt1
 
                     }
 
@@ -323,16 +377,6 @@ class ZohoTypesGenerator extends ZohoApiCollection {
 
     }
 
-}
-
-interface MappingZoho {
-    [key: string]: {
-        [key: string]: {
-            data_type: string,
-            field_label: string,
-            id: string
-        }
-    }
 }
 export default ZohoTypesGenerator
 
