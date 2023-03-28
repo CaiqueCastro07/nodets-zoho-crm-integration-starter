@@ -23,8 +23,9 @@ const apiVersion = 3
 
 class ZohoApiCollection {
     #api: AxiosInstance
-    #giroAccessToken: () => string
-    #updateApiInstance: () => void
+    readonly #giroAccessToken: () => string
+    readonly #updateApiInstance: () => void
+    
     constructor() {
 
         this.#giroAccessToken = function (): string {
