@@ -70,7 +70,7 @@ class ZohoApiCollection {
 
              for (let i = 0; i < 8; i++) {
                 await delay(3000)
-                if (localAccessToken?.length) break;
+                if (!accessTokenRenewing) break;
             }
 
             if (!localAccessToken?.length) {
