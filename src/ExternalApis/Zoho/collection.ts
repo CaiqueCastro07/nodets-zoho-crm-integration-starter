@@ -56,29 +56,26 @@ class ZohoApiCollection {
         this.#updateApiInstance()
 
     }
-    async renewAccessToken(waiting?:number): Promise<ErrorStruct | SuccessStruct> {
+    async renewAccessToken(): Promise<ErrorStruct | SuccessStruct> {
 
         const funcName = "ZohoApiCollection.renewAccessToken"
 
-       if (!accessTokenRenewing && !waiting) {
+       if (!accessTokenRenewing) {
 
             accessTokenRenewing = true;
 
-            while (localAccessToken?.length) {
-                localAccessToken.shift()
-            }
-
+            while (localAccessToken?.length) localAccessToken.shift();
+            
         } else {
 
-            await delay(3000)
-
-            if (waiting > 8) {
-                accessTokenRenewing = false;
-                return errorStruct(funcName, "Erro ao aguardar a renovação do access token", { tries: waiting })
+             for (let i = 0; i < 8; i++) {
+                await delay(3000)
+                if (localAccessToken?.length) break;
             }
 
             if (!localAccessToken?.length) {
-                return await this.renewAccessToken(Number(waiting) ? ++waiting : 1)
+                accessTokenRenewing = false;
+                return errorStruct(funcName, "Erro ao renovar os acesstokens da fila", { localAccessToken })
             }
 
             accessTokenRenewing = false;
@@ -89,8 +86,6 @@ class ZohoApiCollection {
 
         }
         
-        accessTokenRenewing = true
-
         if ([localRefreshToken].some((e) => !e || typeof e != 'string')) {
 
             const zohoTokens = await getZohoTokenDB()
