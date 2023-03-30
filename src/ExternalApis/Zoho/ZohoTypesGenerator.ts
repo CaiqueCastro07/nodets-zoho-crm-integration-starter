@@ -178,7 +178,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
 
                                 const options = subPickList.reduce((acc, e3, i3) => {
         
-                                    const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : ")[] | []";
+                                    const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : ")[]";
         
                                     if (!e3?.display_value || typeof e3?.display_value != 'string') return acc
         
@@ -256,7 +256,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
 
                         const options = pick_list_values.reduce((acc, e2, i2) => {
 
-                            const sep = i2 == 0 || i2 + 1 != pick_list_values.length ? "|" : ")[] | []";
+                            const sep = i2 == 0 || i2 + 1 != pick_list_values.length ? "|" : ")[]";
 
                             if (!e2?.display_value || typeof e2?.display_value != 'string') return acc
 
