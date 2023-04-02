@@ -1,11 +1,10 @@
 import { ErrorStruct, SuccessStruct } from "../../types/dto";
-import { delay, errorStruct } from "../../util/helpers"
+import { delay, errorStruct,isObject } from "../../util/helpers"
 import { getZohoTokenDB } from "../../database/databaseServices"
 //@ts-ignore
 import axios, { AxiosResponse, AxiosInstance } from "axios";
 import * as moment from "moment-timezone"
 import { Accounts, Contacts, Leads, ModulosZoho, NomeModulosZoho } from "../../types/zoho-entidades-types"
-import { isObject } from "lodash";
 import { ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET } from "../../util/secrets"
 //@ts-ignore
 const isProd = process?.env?.NODE_ENV?.toLowerCase?.() == "prod"
