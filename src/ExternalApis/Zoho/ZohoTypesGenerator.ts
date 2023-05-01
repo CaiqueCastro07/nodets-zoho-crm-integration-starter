@@ -1,14 +1,11 @@
-import { delay, errorStruct, validaNumero, validateDate } from "../../util/helpers"
+import { delay, errorStruct, validaNumero, validateDate, isObject } from "../../util/helpers"
 import ZohoApiCollection from "./collection"
 import * as fs from "fs"
-import { ErrorStruct, SuccessStruct } from "../../types/dto";
+import { ReturnStruct } from "../../types/dto";
 import logger from "../../util/logger";
 import * as moment from "moment-timezone"
-import { isObject } from "lodash";
 
 const modulosUsados: string[] = ["Leads", "Contacts", "Accounts", "Tasks"]
-
-
 class ZohoTypesGenerator extends ZohoApiCollection {
 
     constructor() {
@@ -79,7 +76,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
         })
 
     }
-    async montaJSONCamposModulos(): Promise<ErrorStruct | SuccessStruct> {
+    async montaJSONCamposModulos(): Promise<ReturnStruct<any>> {
 
         const mapping: { [key: string]: any } = {}
 
@@ -156,7 +153,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
 
                         const { data: subFormFields, error: subFormFieldsError } = await this.getMetaFieldsFromModule({ moduleName: subFormName })
 
-                        if (subFormFieldsError) return errorStruct("a", subFormFieldsError, subFormFields)
+                        if (typeof subFormFieldsError == 'string') return errorStruct("a", subFormFieldsError, subFormFields)
 
                         const subFormTypes = {
                             id: {
@@ -169,7 +166,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                         alt2: for (const e2 of subFormFields) {
 
                             const { api_name: api_name2, data_type: data_type2, field_label: field_label2,
-                                id: id2, visible: visible2, pick_list_values:subPickList } = e2 || {}
+                                id: id2, visible: visible2, pick_list_values: subPickList } = e2 || {}
 
                             if (!api_name2 || typeof api_name2 != 'string') continue alt2
                             if (!visible2) continue alt2
@@ -177,59 +174,59 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                             if (data_type == "multiselectpicklist" && Array.isArray(subPickList)) {
 
                                 const options = subPickList.reduce((acc, e3, i3) => {
-        
+
                                     const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : ")[]";
-        
+
                                     if (!e3?.display_value || typeof e3?.display_value != 'string') return acc
-        
+
                                     if (e3?.display_value.toLowerCase().includes("none")) {
                                         acc += (` null ` + sep)
                                         return acc
                                     }
-        
+
                                     acc += (` "${e3?.display_value}" ` + sep)
-        
+
                                     return acc
-        
+
                                 }, "(")
-        
+
                                 subFormTypes[api_name2] = {
                                     data_type: options,
                                     field_label,
                                     id
                                 }
-        
+
                                 continue alt2
-        
+
                             }
-        
+
                             if (data_type2 == "picklist" && Array.isArray(subPickList)) {
-        
+
                                 const options = subPickList.reduce((acc, e3, i3) => {
-        
+
                                     const sep = i3 == 0 || i3 + 1 != subPickList.length ? "|" : "";
-        
+
                                     if (!e3?.display_value || typeof e3?.display_value != 'string') return acc
-        
+
                                     if (e3?.display_value.toLowerCase().includes("none")) {
                                         acc += (` null ` + sep)
                                         return acc
                                     }
-        
+
                                     acc += (` "${e3?.display_value}" ` + sep)
-        
+
                                     return acc
-        
+
                                 }, "")
-        
+
                                 subFormTypes[api_name2] = {
                                     data_type: options,
                                     field_label,
                                     id
                                 }
-        
+
                                 continue alt2
-        
+
                             }
 
                             subFormTypes[api_name2] = {

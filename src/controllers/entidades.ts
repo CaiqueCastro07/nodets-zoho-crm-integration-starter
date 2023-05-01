@@ -61,7 +61,7 @@ router.put(`/${controller}/testar/:id`, async (req: Request, res: Response): Pro
 const agendaRetiradaDaEntidadeDoRunner = (idRecord: string, seconds?: number) => {
 
     if (!idRecord || typeof idRecord != "string") return
-    if (!seconds || typeof seconds != 'number') seconds = 400
+    if (!Number(seconds) || seconds < 1) seconds = 1
 
     setTimeout(() => {
         delete entidadeRunning?.[idRecord]

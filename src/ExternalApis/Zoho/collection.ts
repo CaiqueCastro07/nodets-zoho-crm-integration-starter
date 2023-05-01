@@ -1,5 +1,5 @@
-import { ErrorStruct, SuccessStruct } from "../../types/dto";
-import { delay, errorStruct,isObject } from "../../util/helpers"
+import { ReturnStruct } from "../../types/dto";
+import { delay, errorStruct, isObject } from "../../util/helpers"
 import { getZohoTokenDB } from "../../database/databaseServices"
 //@ts-ignore
 import axios, { AxiosResponse, AxiosInstance } from "axios";
@@ -24,7 +24,7 @@ class ZohoApiCollection {
     #api: AxiosInstance
     readonly #giroAccessToken: () => string
     readonly #updateApiInstance: () => void
-    
+
     constructor() {
 
         this.#giroAccessToken = function (): string {
@@ -55,19 +55,19 @@ class ZohoApiCollection {
         this.#updateApiInstance()
 
     }
-    async renewAccessToken(): Promise<ErrorStruct | SuccessStruct> {
+    async renewAccessToken(): Promise<ReturnStruct<undefined>> {
 
         const funcName = "ZohoApiCollection.renewAccessToken"
 
-       if (!accessTokenRenewing) {
+        if (!accessTokenRenewing) {
 
             accessTokenRenewing = true;
 
             while (localAccessToken?.length) localAccessToken.shift();
-            
+
         } else {
 
-             for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 8; i++) {
                 await delay(3000)
                 if (!accessTokenRenewing) break;
             }
@@ -84,7 +84,7 @@ class ZohoApiCollection {
             return { error: false }
 
         }
-        
+
         if ([localRefreshToken].some((e) => !e || typeof e != 'string')) {
 
             const zohoTokens = await getZohoTokenDB()
@@ -107,7 +107,7 @@ class ZohoApiCollection {
 
         const getAccessTokens = await this.getAccessTokens(accessTokenQuantity)
 
-        if (getAccessTokens?.error) {
+        if (typeof getAccessTokens?.error == 'string') {
             accessTokenRenewing = false;
             return errorStruct(funcName, getAccessTokens?.error, getAccessTokens)
         }
@@ -120,7 +120,7 @@ class ZohoApiCollection {
 
     }
 
-    async getAccessTokens(amount: number, tries: number = 0) {
+    async getAccessTokens(amount: number, tries: number = 0): Promise<ReturnStruct<undefined>> {
 
         const { name: funcName } = this.getAccessTokens
 
@@ -177,8 +177,7 @@ class ZohoApiCollection {
 
     async createRecordOnModule(varsObj: {
         moduleName: NomeModulosZoho | string, createMap: ModulosZoho, trigger?: ("workflow" | "blueprint")[]
-    },
-        tries: number = 0): Promise<ErrorStruct | { error: false, data: { recordId: string } }> {
+    }, tries: number = 0): Promise<ReturnStruct<{ recordId: string }>> {
 
         const { name: funcName } = this.createRecordOnModule
 
@@ -220,13 +219,14 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, errorFix?.error, errorFix)
             }
-
+            //@ts-ignore - custom handlers
             if (errorFix?.data?.recordId) {
+                //@ts-ignore - custom handlers
                 return { error: false, data: { recordId: errorFix?.data?.recordId } }
-            } // verificar se logica é possivel
+            }
 
             await delay(1500 * (tries || 1))
             return await this.createRecordOnModule(varsObj, tries + 1)
@@ -238,7 +238,7 @@ class ZohoApiCollection {
     async updateRecordByModuleAndId(varsObj: {
         moduleName: NomeModulosZoho | string, idRecord: string | number,
         updateMap: ModulosZoho, trigger?: ("workflow" | "blueprint")[]
-    }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    }, tries: number = 0): Promise<ReturnStruct<undefined>> {
 
         const { name: funcName } = this.updateRecordByModuleAndId
 
@@ -282,12 +282,12 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { tries, varsObj, errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, errorFix?.error, errorFix)
             }
-
+            //@ts-ignore - custom handlers
             if (errorFix?.data?.newParams) {
-
+                //@ts-ignore - custom handlers
                 const { updateMap: newMap } = errorFix?.data?.newParams || {}
 
                 varsObj.updateMap = newMap
@@ -304,7 +304,8 @@ class ZohoApiCollection {
 
     }
 
-    async getRecordByModuleId(varsObj: { moduleName: NomeModulosZoho, idRecord: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async getRecordByModuleId<Modulo extends ModulosZoho>(varsObj: { moduleName: NomeModulosZoho, idRecord: string }, tries: number = 0)
+        : Promise<ReturnStruct<Modulo>> {
 
         const { name: funcName } = this.getRecordByModuleId
 
@@ -316,7 +317,7 @@ class ZohoApiCollection {
 
             const { data: zohoResult, status } = await this.#api.get(`${moduleName}/${idRecord}`)
 
-            const recordInfo = zohoResult?.data?.[0]
+            const recordInfo: Modulo = zohoResult?.data?.[0]
 
             if (!recordInfo?.id || status != 200) {
                 return errorStruct(funcName, "Erro ao recuperar os dados da entidade", { zohoResult, status })
@@ -332,7 +333,7 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, errorFix?.error, errorFix)
             }
 
@@ -342,9 +343,10 @@ class ZohoApiCollection {
 
     }
 
-    async getUserFromCRMById(userId: string, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async getUserFromCRMById(userId: string, tries: number = 0)
+        : Promise<ReturnStruct<{ id: string, name: string }>> {
 
-        const { name: funcName } = this.getUserFromCRMById
+        const { name: funcName } = this.getUserFromCRMById || {}
 
         if (!userId || typeof userId != 'string') return errorStruct(funcName, "o ID do usuário está inváldo", { userId })
 
@@ -368,7 +370,7 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, errorFix?.error, errorFix)
             }
 
@@ -378,7 +380,8 @@ class ZohoApiCollection {
 
     }
 
-    async getUsersFromCRM(varsObj?: {}, queriedUsers: any[] = [], pagination: number = 1, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async getUsersFromCRM(varsObj?: {}, queriedUsers: any[] = [], pagination: number = 1, tries: number = 0)
+        : Promise<ReturnStruct<{ id: string, name: string }[]>> {
 
         const { name: funcName } = this.getUsersFromCRM
 
@@ -430,7 +433,7 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, errorFix?.error, errorFix)
             }
 
@@ -440,7 +443,8 @@ class ZohoApiCollection {
 
     }
 
-    async getTagsByModule(moduleName: NomeModulosZoho, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async getTagsByModule(moduleName: NomeModulosZoho, tries: number = 0)
+        : Promise<ReturnStruct<{ id: string, name: string }[]>> {
 
         const { name: funcName } = this.getTagsByModule
 
@@ -479,7 +483,7 @@ class ZohoApiCollection {
     }
 
     async criarNotaNoModulo(varsObj: { moduleName: string, idRecord: string, notaMap: { Note_Title: string, Note_Content: string } },
-        tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+        tries: number = 0): Promise<ReturnStruct<undefined>> {
 
         const { name: funcName } = this.criarNotaNoModulo
 
@@ -532,7 +536,8 @@ class ZohoApiCollection {
 
     }
 
-    async converterLead(idLead: string, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async converterLead(idLead: string, tries: number = 0)
+        : Promise<ReturnStruct<{ contact: { id: string }, account: { id: string } }>> {
 
         const { name: funcName } = this.converterLead
 
@@ -586,7 +591,7 @@ class ZohoApiCollection {
 
             const errorFix = await this.errorHandler({ err, funcName, funcVars: { idLead } })
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, `Erro fatal ao criar tarefa do usuário`, errorFix)
             }
 
@@ -597,7 +602,8 @@ class ZohoApiCollection {
 
     }
 
-    async searchOnModuleByName(varsObj: { moduleName: string, recordValue: string, fieldName: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async searchOnModuleByName(varsObj: { moduleName: string, recordValue: string, fieldName: string }, tries: number = 0)
+        : Promise<ReturnStruct<Record<string, any>>> {
 
         const { name: funcName } = this.searchOnModuleByName
 
@@ -625,7 +631,7 @@ class ZohoApiCollection {
                 return errorStruct(funcName, "Limite de tentativas atingido.", { tries, errorFix })
             }
 
-            if (errorFix?.error) {
+            if (typeof errorFix?.error == 'string') {
                 return errorStruct(funcName, ``, errorFix)
             }
 
@@ -635,7 +641,8 @@ class ZohoApiCollection {
 
     }
 
-    async getMetaFieldsFromModule(varsObj: { moduleName: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> {
+    async getMetaFieldsFromModule(varsObj: { moduleName: string }, tries: number = 0)
+        : Promise<ReturnStruct<Record<string, any>[]>> {
 
         const { name: funcName } = this.getMetaFieldsFromModule
 
@@ -647,7 +654,7 @@ class ZohoApiCollection {
 
             const { data: zohoResult, status } = await this.#api.get(`settings/fields?module=${moduleName}`)
 
-            const metadata = zohoResult?.fields
+            const metadata = Array.isArray(zohoResult?.fields) ? zohoResult.fields : []
 
             if (status != 200) {
                 return errorStruct(funcName, "Erro ao encontrar o módulo", zohoResult)
@@ -673,7 +680,8 @@ class ZohoApiCollection {
 
     }
 
-    async errorHandler(varsObj: { err: string, funcName: string, funcVars: any }): Promise<ErrorStruct | SuccessStruct> {
+    async errorHandler(varsObj: { err: string, funcName: string, funcVars: any })
+        : Promise<ReturnStruct<undefined>> {
 
         const { funcName, err, funcVars } = varsObj || {}
         //@ts-ignore

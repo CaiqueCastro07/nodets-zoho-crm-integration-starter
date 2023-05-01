@@ -2,38 +2,12 @@
 import {
   zohoTokensRepository, registrosErrosRepository, registrosSucessosRepository
 } from './repositories';
-import { ErrorStruct, ZohoTokenStruct, SuccessStruct } from "../types/dto";
+import { ReturnStruct, ZohoTokenStruct } from "../types/dto";
 import { errorStruct, delay, isCircularDependency } from "../util/helpers"
 import * as moment from "moment-timezone"
 
-const createZohoTokenInDB = async (tokenData: ZohoTokenStruct, tries: number = 0): Promise<ErrorStruct | SuccessStruct> => {
-
-  const { name: funcName } = createZohoTokenInDB
-
-  try {
-
-    const dbResult = await zohoTokensRepository.create(tokenData)
-
-    if (dbResult?.errors) {
-      return errorStruct(funcName, "Erro ao criar a entidade do Token Zoho no banco de dados.", { dbResult })
-    }
-
-    return { error: false }
-
-  } catch (err) {
-
-    if (typeof tries != 'number' || tries > 3 || tries < 0) {
-      return errorStruct(funcName, "Erro fatal ao criar a entidade do Token Zoho no banco de dados.", { err })
-    }
-
-    await delay(1500 * (tries || 1))
-    return await createZohoTokenInDB(tokenData, tries + 1)
-  }
-
-}
-
-
-const registraErroDB = async (varsObj: { error: string, data: any, idRecord: string, moduleName: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> => {
+const registraErroDB = async (varsObj: { error: string, data: any, idRecord: string, moduleName: string }, tries: number = 0)
+  : Promise<ReturnStruct<undefined>> => {
 
   const { name: funcName } = registraErroDB
 
@@ -75,7 +49,8 @@ const registraErroDB = async (varsObj: { error: string, data: any, idRecord: str
 
 }
 
-const encontraErrosDB = async (varsObj: { error: string, idRecord: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> => {
+const encontraErrosDB = async (varsObj: { error: string, idRecord: string }, tries: number = 0)
+  : Promise<ReturnStruct<any[]>> => {
 
   const { name: funcName } = encontraErrosDB
 
@@ -106,7 +81,8 @@ const encontraErrosDB = async (varsObj: { error: string, idRecord: string }, tri
 
 }
 
-const registroSucessoDB = async (varsObj: { message: string, data: any, idRecord: string, moduleName: string }, tries: number = 0): Promise<ErrorStruct | SuccessStruct> => {
+const registroSucessoDB = async (varsObj: { message: string, data: any, idRecord: string, moduleName: string }, tries: number = 0)
+  : Promise<ReturnStruct<undefined>> => {
 
   const { name: funcName } = registroSucessoDB
 
@@ -146,7 +122,8 @@ const registroSucessoDB = async (varsObj: { message: string, data: any, idRecord
 
 }
 
-const getZohoTokenDB = async (tries: number = 0): Promise<ErrorStruct | { error: false, data: { refreshToken: string } }> => {
+const getZohoTokenDB = async (tries: number = 0)
+  : Promise<ReturnStruct<{ refreshToken: string }>> => {
 
   const { name: funcName } = getZohoTokenDB
 
@@ -174,7 +151,6 @@ const getZohoTokenDB = async (tries: number = 0): Promise<ErrorStruct | { error:
 
 
 export {
-  createZohoTokenInDB,
   getZohoTokenDB,
   encontraErrosDB,
   registraErroDB,

@@ -1,4 +1,4 @@
-import { ErrorStruct, SuccessStruct } from "../../types/dto";
+import { ReturnStruct } from "../../types/dto";
 import { delay, errorStruct } from "../../util/helpers"
 import { } from "../../database/databaseServices"
 import ZohoApiCollection from "../../ExternalApis/Zoho/collection"
@@ -15,13 +15,17 @@ class Entidade extends ZohoApiCollection {
 
     }
 
-    async primeiraFuncao(): Promise<ErrorStruct | SuccessStruct> {
+    async primeiraFuncao(): Promise<ReturnStruct<{ data: string }>> {
 
-        const { name: funcName } = this.primeiraFuncao
+        const { name: funcName } = this.primeiraFuncao || {}
+        // store data as u wish from the operation
+        const storeData = {
+            data: undefined
+        }
 
         if (!this.recordId || typeof this.recordId != 'string') return errorStruct(funcName, "The record id is valid", { recordId: this.recordId })
 
-        return { error: false, data: {} }
+        return { error: false, data: storeData }
 
     }
 
