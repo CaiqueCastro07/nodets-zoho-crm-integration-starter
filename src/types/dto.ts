@@ -8,15 +8,13 @@ interface ResponseType {
     status: number
 }
 
-interface ErrorStruct {
-    error: string | false,
-    data?: {[key:string]:any},
+type ReturnStruct<T> = {
+    error: string,
+    data: Record<string, any>,
     func: string
-}
-
-interface SuccessStruct {
+} | {
     error: false,
-    data?: any
+    data?: T
 }
 
 interface ZohoTokenStruct {
@@ -28,7 +26,6 @@ interface ZohoTokenStruct {
 export {
     ResponseData,
     ResponseType,
-    ErrorStruct,
-    SuccessStruct,
+    ReturnStruct,
     ZohoTokenStruct
 }
