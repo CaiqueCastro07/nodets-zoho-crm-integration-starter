@@ -162,7 +162,7 @@ class ZohoTypesGenerator extends ZohoApiCollection {
                                 id: "000000"
                             }
                         }
-
+                        //@ts-ignore
                         alt2: for (const e2 of subFormFields) {
 
                             const { api_name: api_name2, data_type: data_type2, field_label: field_label2,
