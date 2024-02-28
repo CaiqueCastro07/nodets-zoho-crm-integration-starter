@@ -8,14 +8,7 @@ interface ResponseType {
     status: number
 }
 
-type ReturnStruct<T> = {
-    error: string,
-    data: Record<string, any>,
-    func: string
-} | {
-    error: false,
-    data?: T
-}
+type ReturnStruct<T> = [null, T] | [Error, null]
 
 interface ZohoTokenStruct {
     environment: "prod" | "dev",
